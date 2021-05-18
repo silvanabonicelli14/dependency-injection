@@ -61,7 +61,7 @@ object DependencyInjection {
     inline fun <reified T: Any> add(noinline factoryFn: DependencyInjection.() -> T) {
         add(T::class, factoryFn)
     }
-
+    @Suppress("UNCHECKED_CAST")
     fun <T: Any> add(clazz: KClass<T>, factoryFn: DependencyInjection.() -> T) {
         containerFunctions[clazz as KClass<Any>] = factoryFn
     }
@@ -74,6 +74,7 @@ object DependencyInjection {
 
 inline fun <reified T> di(function: DependencyInjection.() -> T) = DependencyInjection.function()
 
+@Suppress("UNCHECKED_CAST")
 fun diAutoConfigure(packageName: String) {
     Reflections(packageName)
     .getTypesAnnotatedWith(Injected::class.java)
