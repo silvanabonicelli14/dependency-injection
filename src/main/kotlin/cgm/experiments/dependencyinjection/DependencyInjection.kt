@@ -1,7 +1,6 @@
 package cgm.experiments.dependencyinjection
-import cgm.experiments.dependencyinjection.DependencyInjection.add
+
 import cgm.experiments.dependencyinjection.DependencyInjection.addI
-import cgm.experiments.dependencyinjection.DependencyInjection.container
 import cgm.experiments.dependencyinjection.annotation.Injected
 import org.reflections.Reflections
 import kotlin.reflect.KClass
@@ -10,8 +9,8 @@ import kotlin.reflect.jvm.jvmErasure
 
 object DependencyInjection {
 
-    var container =  mutableMapOf<KClass<*>,KClass<*>>()
-    var containerFunctions: MutableMap<KClass<Any>, DependencyInjection.() -> Any> = mutableMapOf()
+    private var container =  mutableMapOf<KClass<*>,KClass<*>>()
+    private var containerFunctions: MutableMap<KClass<Any>, DependencyInjection.() -> Any> = mutableMapOf()
 
     @Suppress("UNCHECKED_CAST")
     inline fun <reified T: Any> add() {
@@ -77,17 +76,10 @@ inline fun <reified T> di(function: DependencyInjection.() -> T) = DependencyInj
 
 fun diAutoConfigure(packageName: String) {
     Reflections(packageName)
-        .getTypesAnnotatedWith(Injected::class.java)
-        .forEach {
-            val clazz = Class.forName(it.name).kotlin as KClass<*>
-            clazz.supertypes.forEach { supertype ->
-                val classInterface = supertype.classifier as KClass<*>
-                if (classInterface.qualifiedName?.contains(packageName) == true){
-                    when {
-                        classInterface.isAbstract -> {container[classInterface] = clazz}
-                        else -> add(clazz)
-                    }
-                }
-            }
+    .getTypesAnnotatedWith(Injected::class.java)
+    .forEach {
+        it.kotlin.supertypes.map { supertype ->
+            addI(supertype.classifier as KClass<*>, it.kotlin as KClass<Nothing>)
+        }
     }
 }
