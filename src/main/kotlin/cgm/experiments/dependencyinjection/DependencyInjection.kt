@@ -1,15 +1,11 @@
 package cgm.experiments.dependencyinjection
+import cgm.experiments.dependencyinjection.DependencyInjection.add
+import cgm.experiments.dependencyinjection.DependencyInjection.addI
 import cgm.experiments.dependencyinjection.DependencyInjection.container
 import cgm.experiments.dependencyinjection.annotation.Injected
 import org.reflections.Reflections
-import org.reflections.scanners.SubTypesScanner
-import org.reflections.util.ClasspathHelper
-import org.reflections.util.ConfigurationBuilder
-import org.reflections.util.FilterBuilder
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
-import kotlin.reflect.KParameter
-import kotlin.reflect.full.functions
 import kotlin.reflect.jvm.jvmErasure
 
 object DependencyInjection {
@@ -46,9 +42,7 @@ object DependencyInjection {
     }
 
     private fun callConstructorWithArgs(constructors: Collection<KFunction<Any>>): Any {
-        val constructor = constructors
-            .sortedBy { it.parameters.size }
-            .first()
+        val constructor = constructors.minByOrNull { it.parameters.size }!!
 
         val args = constructor.parameters.map {
             get(it.type.jvmErasure)
@@ -62,7 +56,7 @@ object DependencyInjection {
     }
 
     fun <T: Any, U: T> addI(interfaze: KClass<T>, clazz: KClass<U>) {
-        container[interfaze] = clazz as KClass<*>
+        container[interfaze] = clazz
     }
 
     inline fun <reified T: Any> add(noinline factoryFn: DependencyInjection.() -> T) {
@@ -86,12 +80,12 @@ fun diAutoConfigure(packageName: String) {
         .getTypesAnnotatedWith(Injected::class.java)
         .forEach {
             val clazz = Class.forName(it.name).kotlin as KClass<*>
-            for (supertype in clazz.supertypes) {
-                val interfaze = supertype.classifier as KClass<*>
-                if (interfaze.qualifiedName?.contains(packageName) == true){
+            clazz.supertypes.forEach { supertype ->
+                val classInterface = supertype.classifier as KClass<*>
+                if (classInterface.qualifiedName?.contains(packageName) == true){
                     when {
-                        interfaze.isAbstract -> {container[interfaze] = clazz}
-                        else -> container[clazz] = clazz
+                        classInterface.isAbstract -> {container[classInterface] = clazz}
+                        else -> add(clazz)
                     }
                 }
             }
