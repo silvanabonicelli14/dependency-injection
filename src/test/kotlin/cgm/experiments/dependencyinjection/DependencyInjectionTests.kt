@@ -122,5 +122,14 @@ class DependencyInjectionTests {
             get<INested>() shouldBe expected
         }
     }
+
+    @Test
+    internal fun `test function literals with receiver`() {
+        html {
+            body() shouldBe "Body"
+            footer() shouldBe "Footer"
+        }
+
+    }
 }
 

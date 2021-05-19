@@ -72,7 +72,7 @@ object DependencyInjection {
     }
 }
 
-inline fun <reified T> di(function: DependencyInjection.() -> T) = DependencyInjection.function()
+inline fun <T> di(function: DependencyInjection.() -> T) = DependencyInjection.function()
 
 @Suppress("UNCHECKED_CAST")
 fun diAutoConfigure(packageName: String) {
@@ -84,3 +84,18 @@ fun diAutoConfigure(packageName: String) {
         }
     }
 }
+
+// TEST  function literals with receiver!!!!!!!!
+
+object HTML {
+    fun body(): String { return "Body"}
+    fun footer(): String { return "Footer"}
+}
+
+inline fun <T> html(function: HTML.() -> T) = HTML.function()
+
+//fun html(function: HTML.() -> Unit): HTML {
+//    val html = HTML()  // create the receiver object
+//    html.function()        // pass the receiver object to the lambda
+//    return html
+//}
